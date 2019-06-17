@@ -1,0 +1,11 @@
+{
+    "name": "Example plugin",
+    "platform": "generic",
+    "guid": "UNIQUE-GUID",
+    "version": "0.1",
+    "description": "Example plugin",
+    "author": "Name",
+    "email": "author@email.com",
+    "url": "https://github.com/p1c2u/galaxy-plugin-example",
+    "script": "plugin.py"
+}

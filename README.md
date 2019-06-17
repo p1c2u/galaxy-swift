@@ -1,2 +1,2 @@
-# galaxy-cli
-This Python CLI helps to easily test integrations with GOG Galaxy 2.0. API
+# galaxy-swift
+Galaxy Swift helps to easily develop and test integrations with GOG Galaxy 2.0. API
