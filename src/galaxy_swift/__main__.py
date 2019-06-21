@@ -1,44 +1,37 @@
-import os
-from optparse import OptionParser
+import logging
 
 from galaxy_swift.cli.commands import BaseCommand
+from galaxy_swift.cli.parsers import RootParser, CommandParser
+from galaxy_swift.exceptions import GalaxySwiftError
 
 
-USAGE = """galaxy <command>
-Commands:
-    create
-        Create a new plugin project.
-    run
-        Run an kodiswift plugin from the command line.
-Help:
-    To see options for a command, run `galaxy <command> -h`
-"""
+def setup_logging(level=logging.INFO):
+    sh = logging.StreamHandler()
+    sh.setLevel(level)
+    logger = logging.getLogger()
+    logger.addHandler(sh)
+    logger.setLevel(level)
 
 
 def main(args=None):
-    parser = OptionParser()
-    if not args:
-        parser.set_usage(USAGE)
-        parser.error('At least one command is required.')
+    prog_name = 'galaxy'
+    setup_logging(logging.DEBUG)
 
-    # spy sys.argv[1] in order to use correct opts/args
-    command = args[0]
+    logging.debug("Parsing root command")
+    root_parser = RootParser(prog_name, BaseCommand.commands)
+    root_namespace = root_parser.parse_args(args)
 
-    if command == '-h':
-        parser.set_usage(USAGE)
-        opts, args = parser.parse_args(args)
+    logging.debug("Parsing sub command")
+    command = BaseCommand.create(root_namespace.command)
+    command_parser = CommandParser(prog_name, command)
+    command_namespace = command_parser.parse_args(root_namespace.args)
 
-    if command not in BaseCommand.commands:
-        parser.error('Invalid command')
-
-    manager_class = BaseCommand.commands[command]
-    manager_class.add_arguments(parser)
-    if hasattr(manager_class, 'usage'):
-        parser.set_usage(manager_class.usage)
-
-    opts, parsed_args = parser.parse_args(args)
-    manager = manager_class()
-    manager.handle(opts, parsed_args)
+    logging.debug("Handling command")
+    try:
+        command.handle(command_namespace)
+    except GalaxySwiftError as exc:
+        logging.exception("%s: error: %s", prog_name, exc)
+        raise SystemExit(2)
 
 # run plugin event loop
 if __name__ == "__main__":

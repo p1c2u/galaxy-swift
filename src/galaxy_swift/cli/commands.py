@@ -1,10 +1,16 @@
 import abc
+import asyncio
+import logging
 import os
 import sys
+from functools import lru_cache
 
-from galaxy_swift.clients import ClientStub
+from galaxy_swift.cli.shells import GalaxyInteractiveShellEmbed
 from galaxy_swift.paths import PluginPath
-from galaxy_swift.runners import SubprocessRunner
+from galaxy_swift.runners import (
+    PluginSubprocessRunner, ClientStubRunner,
+)
+from galaxy_swift.tokens.generators import UUIDTokenGenerator
 
 
 class BaseCommand(abc.ABC):
@@ -24,7 +30,13 @@ class BaseCommand(abc.ABC):
         self.stderr = stderr or sys.stderr
 
     @classmethod
-    def add_arguments(cls, parser):
+    def create(cls, command):
+        assert command in cls.commands
+
+        command_cls = cls.commands[command]
+        return command_cls()
+
+    def add_arguments(self, parser):
         pass
 
     @property
@@ -54,17 +66,36 @@ class InfoCommand(BaseCommand):
         ])
 
 
-class RunCommand(BaseCommand):
+class ShellCommand(BaseCommand):
 
-    help = 'Run plugin'
-    command = 'run'
+    help = 'Run interactive shell'
+    command = 'shell'
 
     @property
-    def runner(self):
-        return SubprocessRunner(
+    @lru_cache(1)
+    def plugin_runner(self):
+        return PluginSubprocessRunner(
             stdout=self.stdout, stderr=self.stderr)
 
-    def handle(self, *args, **options):
-        self.runner.integrate_plugin(self.plugin_path)
+    @property
+    @lru_cache(1)
+    def client_runner(self):
+        return ClientStubRunner()
 
-        self.stdout.write('Done')
+    def handle(self, *args, **options):
+        token = UUIDTokenGenerator().generate()
+        port = '5431'
+
+        self.client_runner.bind(token, port)
+        self.client_runner.start()
+        # asyncio.run(self.runner.start_client(), debug=True)
+        self.plugin_runner.bind(self.plugin_path, token, port)
+        self.plugin_runner.start()
+
+        # self.stdout.write('Done')
+
+        shell = GalaxyInteractiveShellEmbed(exit_msg='Goodbye!')
+        shell(self.client_runner.client)
+
+        self.plugin_runner.terminate()
+        self.client_runner.terminate()

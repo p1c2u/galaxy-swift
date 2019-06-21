@@ -31,7 +31,8 @@ setup(
     packages=find_packages("src"),
     package_dir={'': 'src'},
     install_requires=[
-        "galaxy.plugin.api"
+        "galaxy.plugin.api",
+        "ipython",
     ],
     entry_points={
         'console_scripts': [
