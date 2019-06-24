@@ -8,7 +8,7 @@ from functools import lru_cache
 from galaxy_swift.cli.shells import GalaxyInteractiveShellEmbed
 from galaxy_swift.paths import PluginPath
 from galaxy_swift.runners import (
-    PluginSubprocessRunner, ClientStubRunner,
+    PluginSubprocessRunner, ClientStubRunner, AsyncClientStubRunner,
 )
 from galaxy_swift.tokens.generators import UUIDTokenGenerator
 
@@ -80,7 +80,7 @@ class ShellCommand(BaseCommand):
     @property
     @lru_cache(1)
     def client_runner(self):
-        return ClientStubRunner()
+        return AsyncClientStubRunner()
 
     def handle(self, *args, **options):
         token = UUIDTokenGenerator().generate()

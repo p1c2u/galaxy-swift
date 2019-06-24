@@ -3,7 +3,7 @@ import logging
 import subprocess
 import threading
 
-from galaxy_swift.api.clients import GalaxyClientStub
+from galaxy_swift.api.clients import GalaxyClientStub, GalaxyAsyncClientStub
 from galaxy_swift.exceptions import GalaxySwiftError
 from galaxy_swift.paths import PluginPath
 
@@ -20,14 +20,6 @@ class PluginSubprocessRunner(threading.Thread):
         self.plugin_path = None
         self.token = None
         self.port = None
-
-    # @property
-    # def client(self):
-    #     return GalaxyClientStub(self.port)
-
-    # async def start_client(self):
-    #     logging.info("Starting client")
-    #     await self.client.run()
 
     def bind(self, plugin_path: PluginPath, token: str, port: str):
         logging.info(
@@ -71,21 +63,54 @@ class PluginSubprocessRunner(threading.Thread):
 class ClientStubRunner(threading.Thread):
 
     def __init__(self):
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self, daemon=True)
 
         self.client = None
 
         self.port = None
         self.token = None
 
-    def bind(self, token: str, port: int):
+        self._loop = None
+
+    def bind(self, token: str, port: int, loop=None):
         logging.info("Binding client on %s port with %s token", port, token)
-        self.port = port
+        self.port = int(port)
         self.token = token
+
+        self._loop = loop
 
     def run(self):
         logging.info("Starting client")
         self.client = GalaxyClientStub(self.token, self.port)
+        self.client.run()
+
+    def terminate(self):
+        logging.info("Terminating client")
+        self.client.terminate()
+
+
+class AsyncClientStubRunner(threading.Thread):
+
+    def __init__(self):
+        threading.Thread.__init__(self, daemon=True)
+
+        self.client = None
+
+        self.port = None
+        self.token = None
+
+        self._loop = None
+
+    def bind(self, token: str, port: int, loop=None):
+        logging.info("Binding client on %s port with %s token", port, token)
+        self.port = int(port)
+        self.token = token
+
+        self._loop = loop
+
+    def run(self):
+        logging.info("Starting client")
+        self.client = GalaxyAsyncClientStub(self.token, self.port)
         asyncio.run(self.client.run())
 
     def terminate(self):
