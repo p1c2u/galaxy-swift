@@ -8,10 +8,10 @@ from galaxy_swift.__main__ import main
     'os.getcwd',
     lambda: (
         os.path.dirname(os.path.abspath(__file__)) +
-        '/data/plugin'
+        '/data/dummy'
     ),
 )
-class TestPlugin:
+class TestDummyPlugin:
 
     prog_name = 'galaxy'
 

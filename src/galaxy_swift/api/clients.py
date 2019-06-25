@@ -162,12 +162,14 @@ class GalaxyClientStub(socketserver.TCPServer, BaseGalaxyClientStub):
 
 class GalaxyAsyncClientStub(BaseGalaxyClientStub):
 
-    def __init__(self, token, port, loop=None):
+    def __init__(self, token, port, loop=None, connected_cb=None):
         super().__init__(token, port)
 
         self._active = False
         self._connected = False
         self._loop = loop
+
+        self._connected_cb = connected_cb
 
     async def run(self):
         log.info("Running client")
@@ -212,6 +214,8 @@ class GalaxyAsyncClientStub(BaseGalaxyClientStub):
     async def on_plugin_connected(self, reader, writer):
         log.info("Plugin connected to server")
         self._connected = True
+        if self._connected_cb is not None:
+            self._connected_cb()
 
         self.reader = reader
         self.writer = writer

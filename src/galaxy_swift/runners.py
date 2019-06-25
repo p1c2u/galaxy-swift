@@ -102,6 +102,7 @@ class AsyncClientStubRunner(threading.Thread):
         self.token = None
 
         self._loop = None
+        self._connected = threading.Event()
 
     def bind(self, token: str, port: int, loop=None):
         log.info("Binding client on %s port with %s token", port, token)
@@ -112,8 +113,20 @@ class AsyncClientStubRunner(threading.Thread):
 
     def run(self):
         log.info("Starting client")
-        self.client = GalaxyAsyncClientStub(self.token, self.port)
+        self.client = GalaxyAsyncClientStub(
+            self.token, self.port,
+            connected_cb=self._connected_cb,
+        )
         asyncio.run(self.client.run())
+
+    def _connected_cb(self):
+        self._connected.set()
+
+    def wait(self, timeout=None):
+        self._connected.wait(timeout)
+
+    def execute(self, method, *args):
+        return self.client.call(method, *args)
 
     def terminate(self):
         log.info("Terminating client")
