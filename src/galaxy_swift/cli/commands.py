@@ -1,6 +1,5 @@
 import abc
 import asyncio
-import logging
 import os
 import sys
 from functools import lru_cache
@@ -22,7 +21,7 @@ class BaseCommand(abc.ABC):
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        cls.commands[cls.command] = cls
+        cls.commands[cls.command] = cls  # pylint: disable=no-member
 
     def __init__(self, plugin_dir=None, stdout=None, stderr=None):
         self.plugin_dir = plugin_dir or os.getcwd()
