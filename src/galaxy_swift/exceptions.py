@@ -1,6 +1,6 @@
-class GalaxyStubError(Exception):
+class GalaxySwiftError(Exception):
     pass
 
 
-class InvalidPlugin(GalaxyStubError):
+class InvalidPlugin(GalaxySwiftError):
     pass

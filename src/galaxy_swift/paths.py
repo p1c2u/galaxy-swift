@@ -27,10 +27,3 @@ class PluginPath(Path):
         content = self.read_manifest()
         data = loads(content)
         return Manifest(**data)
-
-    def run_script(self):
-        manifest = self.get_manifest()
-        env = {
-            'PYTHONPATH': 'self',
-        }
-        subprocess.run(['python', manifest.script], env=env)

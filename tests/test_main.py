@@ -13,11 +13,12 @@ from galaxy_swift.__main__ import main
 )
 class TestPlugin:
 
+    prog_name = 'galaxy'
+
     def test_info(self, capfd):
         """Test info plugin"""
-        testargs = ["info"]
-
-        main(testargs)
+        args = ["info", ]
+        main(args=args)
 
         out, err = capfd.readouterr()
         assert out == (
@@ -32,14 +33,4 @@ class TestPlugin:
             " Url: https://github.com/p1c2u/galaxy-plugin-example\n"
             " Script: plugin.py\n"
         )
-        assert err == ""
-
-    def test_run(self, capfd):
-        """Test run plugin"""
-        testargs = ["run"]
-
-        main(testargs)
-
-        out, err = capfd.readouterr()
-        assert out == "Done"
         assert err == ""
